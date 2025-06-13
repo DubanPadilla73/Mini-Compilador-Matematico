@@ -1,4 +1,4 @@
-import re
+import re  # Librería para expresiones regulares
 
 variables = {}  # Diccionario para guardar las variables
 
@@ -9,7 +9,7 @@ def tokenizador(expresion):
 
     # definimos el patron de los tokens
     patron = r'\d+\.\d+|\d+|[a-zA-Z_][a-zA-Z0-9_]*|[\+\-\*\/\^]|=|\(|\)'
-    tokens = re.findall(patron, expresion)
+    tokens = re.findall(patron, str(expresion))
     return tokens
 
 # Asignaciones y entorno de variables.
@@ -52,7 +52,59 @@ def procesar_linea(entrada):
             print("Variables actuales:", variables)
     else:
         # Evaluación
-        expresion = tokens
-        expresion_con_valor = reemplazar_variables(expresion)
+        expresion_con_valor = reemplazar_variables(tokens)
         resultado = evaluar(expresion_con_valor)
         print(f"Resultado: {resultado}")
+    return expresion
+
+
+def papomudas(operador):
+    if operador == '+':
+        return 1
+    elif operador == '-':
+        return 1
+    elif operador == '*':
+        return 2
+    elif operador == '/':
+        return 2
+    elif operador == '^':
+        return 3
+    else:
+        return 0
+
+# Conversión de notación infija a posfija (Shunting Yard Algorithm)
+
+
+def infija_a_posfija(tokens):
+    salida = []
+    pila = []
+    for token in tokens:
+        # Si el token es un número o una variable, lo añadimos a la salida.
+        # re.match() devuelve un objeto de coincidencia si el patrón coincide con el token
+        if re.match(r'\d+|\d+\.\d+', token) or re.match(r'[a-zA-Z_][a-zA-Z0-9_]*', token):
+            # append agrega el token al final de la lista
+            salida.append(token)
+        elif token == '(':
+            pila.append(token)
+        elif token == ')':
+            # pop hasta encontrar el paréntesis de apertura
+            while pila and pila[-1] != '(':
+                # pop() elimina el último elemento de la lista y lo devuelve
+                salida.append(pila.pop())
+            pila.pop()  # Elimina el paréntesis de apertura
+        else:  # Es un operador
+            while (pila and pila[-1] != '(' and papomudas(pila[-1]) >= papomudas(token)):
+                salida.append(pila.pop())
+            pila.append(token)
+    while pila:
+        salida.append(pila.pop())
+    return salida
+
+
+# Ejemplo de uso
+entrada = "x = (3 + 43) * 200 / (1 - 5) ^ 2 ^ 3"
+tokens = tokenizador(entrada)
+print("Tokens:", tokens)
+expresion = tokenizador(procesar_linea(entrada))
+posfija = infija_a_posfija(expresion)
+print("Postfija:", ' '.join(posfija))
