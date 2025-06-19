@@ -2,39 +2,27 @@ import re  # Librería para expresiones regulares
 
 variables = {}  # Diccionario para guardar las variables
 
-# Tokenizacion: sacar numeros, variables, operadores, simbolos.
+# TOKENIZADOR: sacar numeros, variables, operadores, simbolos.
 
 
 def tokenizador(expresion):
-
     # definimos el patron de los tokens
     patron = r'\d+\.\d+|\d+|[a-zA-Z_][a-zA-Z0-9_]*|[\+\-\*\/\^]|=|\(|\)'
     tokens = re.findall(patron, str(expresion))
     return tokens
 
-# Asignaciones y entorno de variables.
+# PARSER: Conversión de notación infija a posfija (Shunting Yard Algorithm)
 
 
 def reemplazar_variables(tokens):
     resultado = []
     for token in tokens:
         if token in variables:
-            resultado.append(variables[token])
+            # convertir a string para evitar errores de tipo
+            resultado.append(str(variables[token]))
         else:
             resultado.append(token)
     return resultado
-
-
-def evaluar(tokens):
-    expresion_string = ''.join(tokens)
-    expresion_string = expresion_string.replace(
-        '^', '**')  # Reemplazar ^ por ** para potencia
-    try:
-        resultado = eval(expresion_string)
-        return resultado
-    except Exception as e:
-        print(f"Error al evaluar la expresión: {expresion_string}")
-        return None
 
 
 def procesar_linea(entrada):
@@ -46,7 +34,7 @@ def procesar_linea(entrada):
         expresion_con_valor = reemplazar_variables(expresion)
         resultado = evaluar(expresion_con_valor)
         if resultado is not None:
-            variables[nombre_variable] = resultado
+            variables[nombre_variable] = float(resultado)
         return expresion, resultado
     else:
         # Evaluación
@@ -69,7 +57,7 @@ def papomudas(operador):
     else:
         return 0
 
-# Conversión de notación infija a posfija (Shunting Yard Algorithm)
+# Conversion de notación infija a posfija (Shunting Yard Algorithm)
 
 
 def infija_a_posfija(tokens):
@@ -110,7 +98,19 @@ def infija_a_prefija(tokens):
     salida = infija_a_posfija(tokens)
     return salida[::-1]  # Invertir la salida para obtener la notación prefija
 
-# Paso a paso
+# EVALUADOR: Paso a paso
+
+
+def evaluar(tokens):
+    expresion_string = ''.join(tokens)
+    expresion_string = expresion_string.replace(
+        '^', '**')  # Reemplazar ^ por ** para potencia
+    try:
+        resultado = eval(expresion_string)
+        return resultado
+    except Exception as e:
+        print(f"Error al evaluar la expresión: {expresion_string}")
+        return None
 
 
 def paso_a_paso(posfija):
@@ -121,6 +121,7 @@ def paso_a_paso(posfija):
             pila.append(int(token))
         elif token in variables:
             pila.append((variables[token]))
+            print(f"{token} = {variables[token]}")
         elif token in ["+", "-", "*", "/", "^"]:
             if len(pila) < 2:
                 print("Error: No hay suficientes operandos en la pila.")
@@ -151,6 +152,23 @@ def paso_a_paso(posfija):
         return
 
 
+def imprimir_variables(entrada):
+    if not variables:
+        print("No hay variables definidas.")
+    elif entrada[0] in variables:
+        print(f"Salida: {entrada[0]} = {variables[entrada[0]]}")
+    contador = len(variables)
+    if len(variables) > 0:
+        print("Variables:", end=" {")
+        for variable in variables:
+            if contador > 1:
+                print(f"{variable} : {variables[variable]}", end=", ")
+            elif contador == 1:
+                print(f"{variable} : {variables[variable]}", end="")
+            contador -= 1
+        print("}")
+
+
 # Interfaz de usuario
 activo = True
 
@@ -158,7 +176,7 @@ while activo:
     print("-"*5 + " Entrada " + "-"*5)
     entrada = str(input("Entrada: "))
 
-    print("\n""-"*5 + " Salida " + "-"*5)
+    print("\n"+"-"*5 + " Salida " + "-"*5)
     print("Evaluacion paso a paso:\n")
 
     expresion, resultado = procesar_linea(entrada)
@@ -166,13 +184,8 @@ while activo:
     prefija = infija_a_prefija(expresion)
 
     paso_a_paso(posfija)
-    print("\n")
 
-    token = tokenizador(entrada)
-    if variables in token:
-        nombre_variable = token[0]
-        print(f"Asignación: {nombre_variable} = {resultado}")
-        print(f"Variable: {variables}")
+    imprimir_variables(entrada)
 
     print("\nPrefija:", " ".join(prefija))
     print("Postfija:", " ".join(posfija))
