@@ -66,7 +66,7 @@ def infija_a_posfija(tokens):
     for token in tokens:
         # Si el token es un número o una variable, lo añadimos a la salida.
         # re.match() devuelve un objeto de coincidencia si el patrón coincide con el token
-        if re.match(r'\d+|\d+\.\d+', token) or re.match(r'[a-zA-Z_][a-zA-Z0-9_]*', token):
+        if re.match(r"\d+\.\d+|\d+", token) or re.match(r'[a-zA-Z_][a-zA-Z0-9_]*', token):
             # append agrega el token al final de la lista
             salida.append(token)
         elif token == '(':
@@ -117,8 +117,8 @@ def paso_a_paso(posfija):
     pila = []
 
     for token in posfija:
-        if re.match(r"\d+|\d+\.\d+", str(token)):  # Verifica si es un número
-            pila.append(int(token))
+        if re.match(r"\d+\.\d+|\d+", str(token)):  # Verifica si es un número
+            pila.append(float(token))
         elif token in variables:
             pila.append((variables[token]))
             print(f"{token} = {variables[token]}")
